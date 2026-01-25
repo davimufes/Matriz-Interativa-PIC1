@@ -1,96 +1,157 @@
-#include <Adafruit_NeoPixel.h>
 #include <Wire.h>
-#include <RTClib.h>
 #include <MPU6050.h>
+#include "RTClib.h"
 
-#define LED_PIN 6
-#define NUM_LEDS 256
-#define LM35_PIN A0
+float axFiltrado = 0, ayFiltrado = 0, azFiltrado = 0;
+float alfa = 0.2;
 
-Adafruit_NeoPixel strip(NUM_LEDS, LED_PIN, NEO_GRB + NEO_KHZ800);
-RTC_DS3231 rtc;
-MPU6050 mpu;
+RTC_DS1307 rtc;
+MPU6050 mpu(0x69); 
+char buffer[16][16];
 
-// Variáveis do jogo
-int ballX = 1, ballY = 1;
+// --- Fontes ---
+const uint8_t fonteCubo[10][7] = {
+  {0x1F, 0x11, 0x11, 0x11, 0x11, 0x11, 0x1F}, // 0
+  {0x04, 0x0C, 0x04, 0x04, 0x04, 0x04, 0x0E}, // 1
+  {0x1F, 0x01, 0x01, 0x1F, 0x10, 0x10, 0x1F}, // 2
+  {0x1F, 0x01, 0x01, 0x0F, 0x01, 0x01, 0x1F}, // 3
+  {0x11, 0x11, 0x11, 0x1F, 0x01, 0x01, 0x01}, // 4
+  {0x1F, 0x10, 0x10, 0x1F, 0x01, 0x01, 0x1F}, // 5
+  {0x1F, 0x10, 0x10, 0x1F, 0x11, 0x11, 0x1F}, // 6
+  {0x1F, 0x01, 0x02, 0x04, 0x08, 0x10, 0x10}, // 7
+  {0x1F, 0x11, 0x11, 0x1F, 0x11, 0x11, 0x1F}, // 8
+  {0x1F, 0x11, 0x11, 0x1F, 0x01, 0x01, 0x1F}  // 9
+};
+
+const uint8_t simboloCelsius[7] = {
+  0b01100011, 0b10010100, 0b10010100, 0b01100100, 0b00000100, 0b00000100, 0b00000011
+};
+
+const uint16_t labirinto[16] = {
+  0xFFFF, 0x8001, 0x87F1, 0x8401, 0x847D, 0x8441, 0x8441, 0x8001, 
+  0x8111, 0x8111, 0x8111, 0x8001, 0x8F11, 0x8111, 0x8001, 0xFFFF
+};
+
+int bolaX = 8, bolaY = 8;
+
+// --- Sistema de Desenho com Suporte a Rotação ---
+
+void limparBuffer() {
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 16; j++) buffer[i][j] = '.'; 
+  }
+}
+
+void escreverNoBuffer(int x, int y, char c, int rotacao) {
+  int nx = x, ny = y;
+  if (rotacao == 90) { nx = y; ny = 15 - x; }
+  else if (rotacao == 180) { nx = 15 - x; ny = 15 - y; }
+  else if (rotacao == 270) { nx = 15 - y; ny = x; }
+
+  if (nx >= 0 && nx < 16 && ny >= 0 && ny < 16) {
+    buffer[ny][nx] = c;
+  }
+}
+
+void desenharDigito(int digito, int xOff, int yOff, int rot) {
+  for (int i = 0; i < 7; i++) {
+    for (int j = 0; j < 5; j++) {
+      if ((fonteCubo[digito][i] >> (4 - j)) & 1) {
+        escreverNoBuffer(yOff + j, xOff + i, '#', rot);
+      }
+    }
+  }
+}
+
+void desenharCelsius(int xOff, int yOff, int rot) {
+  for (int i = 0; i < 7; i++) {
+    for (int j = 0; j < 8; j++) {
+      if ((simboloCelsius[i] >> (7 - j)) & 1) {
+        escreverNoBuffer(yOff + j, xOff + i, '#', rot);
+      }
+    }
+  }
+}
+
+void renderizar() {
+  Serial.println("\n\n\n\n\n");
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 16; j++) {
+      Serial.print(buffer[i][j]); Serial.print(" ");
+    }
+    Serial.println("|");
+  }
+}
+
+void modoRelogio() {
+  DateTime now = rtc.now();
+  limparBuffer();
+  desenharDigito(now.hour() / 10, 1, 2, 0);
+  desenharDigito(now.hour() % 10, 1, 9, 0);
+  desenharDigito(now.minute() / 10, 9, 2, 0);
+  desenharDigito(now.minute() % 10, 9, 9, 0);
+  renderizar();
+}
+
+void modoTemperatura() {
+  int16_t tempRaw = mpu.getTemperature();
+  int tempInt = (int)(tempRaw / 340.0 + 36.53);
+  limparBuffer();
+  desenharDigito(tempInt / 10, 1, 2, 270);
+  desenharDigito(tempInt % 10, 1, 9, 270);
+  desenharCelsius(9, 4, 270);
+  renderizar();
+}
+
+void modoData() {
+  DateTime now = rtc.now();
+  limparBuffer();
+  desenharDigito(now.day() / 10, 1, 2, 180);
+  desenharDigito(now.day() % 10, 1, 9, 180);
+  desenharDigito(now.month() / 10, 9, 2, 180);
+  desenharDigito(now.month() % 10, 9, 9, 180);
+  renderizar();
+}
+
+void modoJogo(int16_t ax, int16_t ay) {
+  limparBuffer();
+  for (int i = 0; i < 16; i++) {
+    for (int j = 0; j < 16; j++) {
+      if ((labirinto[i] >> (15 - j)) & 1) escreverNoBuffer(j, i, '#', 0);
+    }
+  }
+  
+  int px = bolaX, py = bolaY;
+  if (ax > 5000) px--; if (ax < -5000) px++;
+  if (ay > 5000) py++; if (ay < -5000) py--;
+
+  if (px >= 0 && px < 16 && py >= 0 && py < 16) {
+    if (!((labirinto[px] >> (15 - py)) & 1)) { bolaX = px; bolaY = py; }
+  }
+  escreverNoBuffer(bolaY, bolaX, 'O', 0);
+  escreverNoBuffer(14, 14, 'F', 0);
+  renderizar();
+}
 
 void setup() {
-  Wire.begin();
-  Serial.begin(9600);
-
-  strip.begin();
-  strip.setBrightness(50);
-  strip.show();
-
-  rtc.begin();
-  mpu.initialize();
+  Serial.begin(9600); Wire.begin();
+  rtc.begin(); mpu.initialize();
+  if (!rtc.isrunning()) rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 }
 
 void loop() {
-  int16_t ax, ay, az;
-  mpu.getAcceleration(&ax, &ay, &az);
+  int16_t ax, ay, az, gx, gy, gz;
+  mpu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 
-  if (abs(ax) < 5000 && abs(ay) < 5000) {
-    showClock();
-  } 
-  else if (ax > 8000) {
-    showTemperature();
-  } 
-  else if (ay > 8000) {
-    showBlue();
-  } 
-  else if (az > 12000) {
-    playGame(ax, ay);
-  }
+  axFiltrado = (alfa * ax) + ((1.0 - alfa) * axFiltrado);
+  ayFiltrado = (alfa * ay) + ((1.0 - alfa) * ayFiltrado);
+  azFiltrado = (alfa * az) + ((1.0 - alfa) * azFiltrado);
 
-  delay(200);
-}
-
-//Relogio
-void showClock() {
-  strip.clear();
-  DateTime now = rtc.now();
-  int hour = now.hour();
-  int minute = now.minute();
-
-  strip.setPixelColor(hour, strip.Color(255, 0, 0));
-  strip.setPixelColor(minute, strip.Color(0, 0, 255));
-  strip.show();
-}
-
-//Temperatura
-void showTemperature() {
-  strip.clear();
-  float temp = analogRead(LM35_PIN) * 5.0 / 1023.0 * 100.0;
-
-  int leds = map(temp, 0, 50, 0, NUM_LEDS);
-  for (int i = 0; i < leds; i++) {
-    strip.setPixelColor(i, strip.Color(255, 100, 0));
-  }
-  strip.show();
-}
-
-//Luminaria
-void showBlue() {
-  for (int i = 0; i < NUM_LEDS; i++) {
-    strip.setPixelColor(i, strip.Color(0, 0, 150));
-  }
-  strip.show();
-}
-
-//Jogo
-void playGame(int ax, int ay) {
-  strip.clear();
-
-  if (ax > 3000) ballX++;
-  if (ax < -3000) ballX--;
-  if (ay > 3000) ballY++;
-  if (ay < -3000) ballY--;
-
-  ballX = constrain(ballX, 0, 15);
-  ballY = constrain(ballY, 0, 15);
-
-  int index = ballY * 16 + ballX;
-  strip.setPixelColor(index, strip.Color(255, 255, 255));
-  strip.show();
+  if (azFiltrado < -10000) modoJogo(ax, ay);
+  else if (axFiltrado > 10000) modoRelogio();
+  else if (axFiltrado < -10000) modoData();
+  else if (ayFiltrado > 10000) modoTemperatura();
+  else { limparBuffer(); renderizar(); }
+  
+  delay((azFiltrado < -10000) ? 100 : 500);
 }
