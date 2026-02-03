@@ -1,32 +1,111 @@
-# Trabalho-PIC
+# Trabalho-PIC – Display Interativo de Mesa
+Display interativo embarcado que integra sensores, microcontrolador e matriz de LEDs endereçáveis, com múltiplos modos de operação definidos pela orientação espacial do dispositivo.
 
-Descrição Geral
-Este projeto consiste no desenvolvimento de um display interativo de mesa, concebido como trabalho principal da disciplina de Projeto Integrado de Computação, do curso de Engenharia de Computação.
-O sistema integra hardware e software, utilizando sensores, microcontrolador, sistema de alimentação por bateria e uma interface visual baseada em uma matriz de LEDs endereçáveis, resultando em um dispositivo embarcado interativo e multifuncional.
+---
 
-O display é capaz de alterar dinamicamente seu comportamento de acordo com a orientação espacial, detectada por um acelerômetro, oferecendo diferentes modos de operação, como exibição de horário, temperatura ambiente, iluminação decorativa e um jogo interativo controlado por inclinação.
+## 2. Descrição (Contextualização)
+Este projeto consiste no desenvolvimento de um **display interativo de mesa**, concebido como trabalho principal da disciplina de **Projeto Integrado de Computação (PIC)**, do curso de **Engenharia de Computação**.
 
-Grupo
-Davi, Heitor e João Gabriel
+O objetivo do código é integrar hardware e software em um sistema embarcado completo, utilizando sensores, microcontrolador, sistema de alimentação por bateria e uma interface visual baseada em uma **matriz de LEDs endereçáveis**.  
+O sistema apresenta comportamento dinâmico, alterando seus modos de operação de acordo com a orientação espacial detectada por um acelerômetro.
 
-Arquitetura de Hardware
-- *inserir imagem*
-Componentes utilizados:
-- 1x Arduino Uno
-- 1x Display de LED endereçável 16x16 Ws2812b
-- 1x Pacote de células com 3,7v e 18Ah
-- 1x Unidade de carregamento usb tp4056
-- 1x Conversor CC 3,7v-12v
-- 1x Sensor de temperatura LM35
-- 1x Sensor acelerômetro MPU-6050
-- 1x Módulo Real-Time Clock
-- 1x Bateria 3v
-- Carcaça feita em xxxxxxx
+---
+
+## 3. Estrutura do Projeto
+A estrutura do projeto é composta pelos seguintes elementos:
+
+- `main.ino`  
+  Arquivo principal do Arduino contendo:
+  - Inicialização dos periféricos
+  - Leitura dos sensores
+  - Lógica de controle dos modos de operação
+  - Controle da matriz de LEDs
+
+- `hardware/` *(opcional)*  
+  Pasta destinada a esquemas elétricos, diagramas ou imagens da arquitetura de hardware.
+
+- `docs/` *(opcional)*  
+  Documentação complementar do projeto.
+
+---
+
+## 4. Como Compilar ou Executar
+Este projeto foi desenvolvido para a plataforma **Arduino**.
+
+### Passos para execução:
+1. Abrir a **Arduino IDE**
+2. Selecionar a placa **Arduino Uno**
+3. Selecionar a porta USB correspondente
+4. Abrir o arquivo `main.ino`
+5. Compilar e realizar o upload do código para a placa
+
+### Bibliotecas Utilizadas:
+- Bibliotecas padrão da Arduino IDE
+- Biblioteca para controle da matriz WS2812B
+- Biblioteca para comunicação I²C
+- Biblioteca para o sensor MPU-6050
+- Biblioteca para módulo Real-Time Clock (RTC)
+
+---
+
+## 5. Como Usar
+O funcionamento do sistema depende da **orientação espacial** do dispositivo:
+
+- O Arduino realiza a leitura contínua do acelerômetro **MPU-6050** via comunicação I²C.
+- A orientação detectada define automaticamente o modo de operação ativo.
+- Cada modo permanece ativo até que uma mudança de posição seja identificada.
+
+### Modos de Operação:
+- **Modo Relógio:**  
+  Exibe o horário atual utilizando um módulo **RTC**, garantindo precisão mesmo sem conexão à internet.
+- **Modo Temperatura:**  
+  Exibe a temperatura ambiente medida pelo sensor **LM35**, em graus Celsius.
+- **Modo Luminária:**  
+  A matriz de LEDs é acionada com iluminação azul que se altera de forma gradual.
+- **Modo Jogo:**  
+  Um jogo interativo em que o usuário controla uma “bola” na matriz de LEDs por meio da inclinação do dispositivo, simulando o efeito da gravidade.
+
+---
+
+## 6. Requisitos
+
+### Software
+- Arduino IDE
+- Linguagem C/C++ (padrão Arduino)
+
+### Hardware
+- 1 × Arduino Uno
+- 1 × Display de LED endereçável 16x16 WS2812B
+- 1 × Módulo Real-Time Clock (RTC)
+- 1 × Pacote de células 3,7 V – 18 Ah
+- 1 × Unidade de carregamento USB TP4056
+- 1 × Conversor CC 3,7 V – 12 V
+- 1 × Bateria 3 V
+- Carcaça confeccionada em material apropriado
 - Painel de acrílico
 
-Lógica de Funcionamento
-O Arduino realiza a leitura contínua do sensor MPU6050 por meio da comunicação I²C, utilizando a aceleração da gravidade para identificar a orientação do dispositivo. Cada orientação corresponde a um modo de funcionamento específico, que permanece ativo até que seja detectada uma mudança na posição.
-No modo relógio, o sistema exibe o horário atual com base em um módulo Real Time Clock (RTC), garantindo a manutenção da hora independentemente de conexão com a internet.
-O modo temperatura utiliza o sensor LM35 para medir a temperatura ambiente, convertendo o sinal analógico em valores expressos em graus Celsius.
-No modo luminária, a matriz de LEDs é acionada em uma tonalidade azul uniforme.
-No modo jogo, o usuário controla uma “bola” exibida na matriz de LEDs por meio da inclinação do dispositivo para escapar de um labirinto, utilizando o acelerômetro para simular o efeito da gravidade.
+---
+
+## 7. Observações Finais
+### Limitações
+- Dependência da orientação correta para troca de modos
+- Sensibilidade do acelerômetro a vibrações externas
+
+### Decisões de Projeto
+- Uso da orientação espacial como forma principal de interação
+- Centralização da lógica de controle no microcontrolador
+- Interface visual baseada exclusivamente na matriz de LEDs
+
+### Possíveis Melhorias
+- Inclusão de botões para seleção manual de modos
+- Implementação de animações mais complexas na matriz de LEDs
+- Otimização do consumo energético
+
+---
+
+## 8. Autoria
+Projeto desenvolvido por:  
+**Davi**, **Heitor** e **João Gabriel**
+
+Disciplina: Projeto Integrado de Computação  
+Curso: Engenharia de Computação
