@@ -23,8 +23,9 @@ A estrutura do projeto é composta pelos seguintes elementos:
 
 - `hardware/`
   Esquemático de circuito para controle e alimentação de matriz de LEDs WS2812B com Arduino UNO R3, RTC DS3231M, MPU-6050 e alimentação por bateria Li-ion, desenvolvido no KiCad.
-  img/PIC1,jpg
+ ## Imagem do Projeto
 
+[![Display Interativo](PIC1.jpg)](PIC1.jpg)
   
 - `docs/` *(opcional)*  
   Documentação complementar do projeto.
