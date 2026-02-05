@@ -21,9 +21,11 @@ A estrutura do projeto é composta pelos seguintes elementos:
   - Lógica de controle dos modos de operação
   - Controle da matriz de LEDs
 
-- `hardware/` *(opcional)*  
-  Pasta destinada a esquemas elétricos, diagramas ou imagens da arquitetura de hardware.
+- `hardware/`
+Esquemático de circuito para controle e alimentação de matriz de LEDs WS2812B com Arduino UNO R3, RTC DS3231M, MPU-6050 e alimentação por bateria Li-ion, desenvolvido no KiCad.
+  (img/PIC1.jpg)
 
+  
 - `docs/` *(opcional)*  
   Documentação complementar do projeto.
 
