@@ -66,11 +66,11 @@ Durante o desenvolvimento em PIC 1, foram superados obstáculos críticos:
 
 ## Créditos
 
-Ao longo de muitas horas de desenvolvimento, contamos com a ajuda de diversas pessoas. Destacamos aqui o técnico Ronney, que uniu as células que compramos em uma bateria, e nos ajudou quando estragamos uma das células; o técnico Rasley que nos auxiliou com solda e resolução de problemas de projeto de hardware; os monitores Gustavo e Gabriel, da elétrica e o professor da disciplina de PIC 1, Jadir.
+Ao longo de muitas horas de desenvolvimento, contamos com a ajuda de diversas pessoas. Destacamos aqui o técnico Ronney, que uniu as células que compramos em uma bateria, e nos ajudou quando estragamos uma das células; o técnico Rasley que nos auxiliou com solda e resolução de problemas de projeto de hardware; os monitores Gustavo e Gabriel e o professor Jadir da disciplina de PIC 1.
 
 ---
 
 ## Grupo
-Davi Milanez de Almeida
-Heitor Valim Bianconi
-João Gabriel Rosa Pereira
+* Davi Milanez de Almeida
+* Heitor Valim Bianconi
+* João Gabriel Rosa Pereira
