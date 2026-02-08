@@ -40,6 +40,8 @@ O processamento utiliza um **Filtro Passa-Baixa (DSP)** para suavizar as leitura
 | **Módulo RTC** | A4 / A5 | SDA - SCL  | I2C |
 | **Sistema** | GND | Referência Comum | - |
 
+### Desenho Esquemático do Circuito
+
 [![Display Interativo](PIC1-11-46_page-0001.jpg)](PIC1-11-46_page-0001.jpg)
 
 ---
