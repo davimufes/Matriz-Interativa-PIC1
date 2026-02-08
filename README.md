@@ -11,7 +11,7 @@ O projeto consiste em um dispositivo embarcado que utiliza uma matriz de LEDs en
 O dispositivo funciona à base de uma bateria de 3,7 V com 15 Ah, possuindo duas cargas principais: o display de LED RGB endereçável 16x16 e o circuito de controle.
 A malha de potência da matriz de LED recebe a tensão de 3,7 V diretamente da bateria para otimizar a eficiência, enquanto o circuito de controle (malha lógica) é alimentado com 5 V por meio de um conversor step-up.
 O sistema utiliza uma **Máquina de Estados Finita (FSM)** para alternar modos:
-* Modo Jogo: Ativado na face superior. Labirinto com física de inclinação.
+* Modo Jogo: Ativado na face superior. Labirinto com física de inclinação e 5 mapas com dificuldade crescente.
 * Modo Relógio e Data: Sincronizados via RTC com gradientes de cores distintos.
 * Modo Temperatura: Monitoramento térmico via sensor interno do MPU6050.
 O processamento utiliza um **Filtro Passa-Baixa (DSP)** para suavizar as leituras do acelerômetro, garantindo estabilidade nas transições de estados e na movimentação da bolinha no jogo.
@@ -23,7 +23,7 @@ O processamento utiliza um **Filtro Passa-Baixa (DSP)** para suavizar as leitura
 * **Matriz de LED WS2812B 16x16:** Painel de 256 pixels endereçáveis.
 * **Sensor MPU6050:** Acelerômetro e temperatura.
 * **Módulo RTC DS1307:** Real-Time Clock para manutenção do tempo.
-* **Bateria Li-ion 3,7 V (15 Ah):** Fonte de energia primária, confeccionada com 5 células 18650 para duração prolongada
+* **Bateria 3,7 V (15 Ah):** Fonte de energia primária, confeccionada com 5 células 18650 para duração prolongada
 * **Conversor Boost HW-553:** Elevação de tensão para 5 V.
 * **Protoboard e Jumpers:** Conexões da malha lógica.
 * **Cabos e Conectores:** Estrutura da malha de potência.
