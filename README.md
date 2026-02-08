@@ -1,114 +1,76 @@
-# Trabalho-PIC – Display Interativo de Mesa
-Display interativo embarcado que integra sensores, microcontrolador e matriz de LEDs endereçáveis, com múltiplos modos de operação definidos pela orientação espacial do dispositivo.
+# Matriz de LED Interativa
+Repositório do trabalho da disciplina de PIC 1 do curso de Engenharia de Computação da Universidade Federal do Espírito Santo (UFES).
+---
+
+## Resumo
+O projeto consiste em um dispositivo embarcado que utiliza uma matriz de LEDs endereçáveis para fornecer informações em tempo real e entretenimento interativo. O objetivo principal é explorar a integração de sensores inerciais com processamento de sinais para criar uma interface de usuário baseada inteiramente na orientação física do objeto. O dispositivo exibe dados de tempo, data, temperatura ambiente e um jogo de labirinto com física gravitacional simulada.
 
 ---
 
-## 2. Descrição (Contextualização)
-Este projeto consiste no desenvolvimento de um **display interativo de mesa**, concebido como trabalho principal da disciplina de **Projeto Integrado de Computação (PIC)**, do curso de **Engenharia de Computação**.
-
-O objetivo do código é integrar hardware e software em um sistema embarcado completo, utilizando sensores, microcontrolador, sistema de alimentação por bateria e uma interface visual baseada em uma **matriz de LEDs endereçáveis**.  
-O sistema apresenta comportamento dinâmico, alterando seus modos de operação de acordo com a orientação espacial detectada por um acelerômetro.
+## Descrição
+O dispositivo funciona à base de uma bateria de 3,7 V com 15 Ah, possuindo duas cargas principais: o display de LED RGB endereçável 16x16 e o circuito de controle.
+A malha de potência da matriz de LED recebe a tensão de 3,7 V diretamente da bateria para otimizar a eficiência, enquanto o circuito de controle (malha lógica) é alimentado com 5 V por meio de um conversor step-up.
+O sistema utiliza uma **Máquina de Estados Finita (FSM)** para alternar modos:
+* Modo Jogo: Ativado na face superior. Labirinto com física de inclinação.
+* Modo Relógio e Data: Sincronizados via RTC com gradientes de cores distintos.
+* Modo Temperatura: Monitoramento térmico via sensor interno do MPU6050.
+O processamento utiliza um **Filtro Passa-Baixa (DSP)** para suavizar as leituras do acelerômetro, garantindo estabilidade nas transições de estados e na movimentação da bolinha no jogo.
 
 ---
 
-## 3. Estrutura do Projeto
-A estrutura do projeto é composta pelos seguintes elementos:
+## Componentes e Materiais
+* **Arduino Uno:** Microcontrolador principal.
+* **Matriz de LED WS2812B 16x16:** Painel de 256 pixels endereçáveis.
+* **Sensor MPU6050:** Acelerômetro e temperatura.
+* **Módulo RTC DS1307:** Real-Time Clock para manutenção do tempo.
+* **Bateria Li-ion 3,7 V (15 Ah):** Fonte de energia primária, confeccionada com 5 células 18650 para duração prolongada
+* **Conversor Boost HW-553:** Elevação de tensão para 5 V.
+* **Protoboard e Jumpers:** Conexões da malha lógica.
+* **Cabos e Conectores:** Estrutura da malha de potência.
+* **Caixa de Acrílico:** Carcaça do dispositivo
 
-- `main.ino`  
-  Arquivo principal do Arduino contendo:
-  - Inicialização dos periféricos
-  - Leitura dos sensores
-  - Lógica de controle dos modos de operação
-  - Controle da matriz de LEDs
+---
 
-- `hardware/`
-  Esquemático de circuito para controle e alimentação de matriz de LEDs WS2812B com Arduino UNO R3, RTC DS3231M, MPU-6050 e alimentação por bateria Li-ion, desenvolvido no KiCad.
- ## Imagem do Projeto
+## Pinout e Conexões
+
+| Componente | Pino Arduino | Função | Protocolo |
+| :--- | :---: | :--- | :---: |
+| **Matriz de LED** | D7 | Sinal de Dados (DIN) | Digital |
+| **Sensor MPU6050** | A4 / A5 | SDA - SCL | I2C |
+| **Módulo RTC** | A4 / A5 | SDA - SCL  | I2C |
+| **Sistema** | GND | Referência Comum | - |
 
 [![Display Interativo](PIC1-11-46_page-0001.jpg)](PIC1-11-46_page-0001.jpg)
-  
-- `docs/` *(opcional)*  
-  Documentação complementar do projeto.
 
 ---
 
-## 4. Como Compilar ou Executar
-Este projeto foi desenvolvido para a plataforma **Arduino**.
-
-### Passos para execução:
-1. Abrir a **Arduino IDE**
-2. Selecionar a placa **Arduino Uno**
-3. Selecionar a porta USB correspondente
-4. Abrir o arquivo `main.ino`
-5. Compilar e realizar o upload do código para a placa
-
-### Bibliotecas Utilizadas:
-- Bibliotecas padrão da Arduino IDE
-- Biblioteca para controle da matriz WS2812B
-- Biblioteca para comunicação I²C
-- Biblioteca para o sensor MPU-6050
-- Biblioteca para módulo Real-Time Clock (RTC)
+## Bibliotecas Utilizadas
+* **FastLED:** Controle dos LEDs e gestão de limite de corrente.
+* **MPU6050:** Interface com o acelerômetro e giroscópio.
+* **RTClib (Adafruit):** Comunicação com o RTC.
+* **Wire.h:** Comunicação I2C (Nativa).
+* **avr/pgmspace.h:** Otimização de memória Flash (Nativa).
 
 ---
 
-## 5. Como Usar
-O funcionamento do sistema depende da **orientação espacial** do dispositivo:
+## Desafios
 
-- O Arduino realiza a leitura contínua do acelerômetro **MPU-6050** via comunicação I²C.
-- A orientação detectada define automaticamente o modo de operação ativo.
-- Cada modo permanece ativo até que uma mudança de posição seja identificada.
-
-### Modos de Operação:
-- **Modo Relógio:**  
-  Exibe o horário atual utilizando um módulo **RTC**, garantindo precisão mesmo sem conexão à internet.
-- **Modo Temperatura:**  
-  Exibe a temperatura ambiente medida pelo sensor **LM35**, em graus Celsius.
-- **Modo Luminária:**  
-  A matriz de LEDs é acionada com iluminação azul que se altera de forma gradual.
-- **Modo Jogo:**  
-  Um jogo interativo em que o usuário controla uma “bola” na matriz de LEDs por meio da inclinação do dispositivo, simulando o efeito da gravidade.
+Durante o desenvolvimento em PIC 1, foram superados obstáculos críticos:
+* Mau Funcionamento de Componentes: Uma matriz estragou por algum motivo que não sabemos, tivemos que comprar outra. 
+* Falhas na Ligação do Circuito: Provavelmente fechamos curto pois queimamos o carregador e uma das células da bateria.
+* Estabilidade de Sinal: Resolução de ruídos e mau contato e várias partes do circuito, inclusive em um momento o pino d6 parou de funcionar, uma solução para instabilidade teria sido usar uma placa de circuito impresso porém não conseguimos nos organizar para desenvolvê-la.
+* Gestão de Energia: Implementação de limite de potência via software (setMaxPower) para evitar o desligamento térmico do conversor step-up em picos de brilho.
+* Eficiência de Memória: Uso de bitmasks para armazenar os mapas dos labirintos, economizando memória RAM do Arduino Uno.
 
 ---
 
-## 6. Requisitos
+## Créditos
 
-### Software
-- Arduino IDE
-- Linguagem C/C++ (padrão Arduino)
-
-### Hardware
-- 1 × Arduino Uno
-- 1 × Display de LED endereçável 16x16 WS2812B
-- 1 × Módulo Real-Time Clock (RTC)
-- 1 × Pacote de células 3,7 V – 18 Ah
-- 1 × Unidade de carregamento USB TP4056
-- 1 × Conversor CC 3,7 V – 12 V
-- 1 × Bateria 3 V
-- Carcaça confeccionada em material apropriado
-- Painel de acrílico
+Ao longo de muitas horas de desenvolvimento, contamos com a ajuda de diversas pessoas. Destacamos aqui o técnico Ronney, que uniu as células que compramos em uma bateria, e nos ajudou quando estragamos uma das células; o técnico Rasley que nos auxiliou com solda e resolução de problemas de projeto de hardware; os monitores Gustavo e Gabriel, da elétrica e o professor da disciplina de PIC 1, Jadir.
 
 ---
 
-## 7. Observações Finais
-### Limitações
-- Dependência da orientação correta para troca de modos
-- Sensibilidade do acelerômetro a vibrações externas
-
-### Decisões de Projeto
-- Uso da orientação espacial como forma principal de interação
-- Centralização da lógica de controle no microcontrolador
-- Interface visual baseada exclusivamente na matriz de LEDs
-
-### Possíveis Melhorias
-- Inclusão de botões para seleção manual de modos
-- Implementação de animações mais complexas na matriz de LEDs
-- Otimização do consumo energético
-
----
-
-## 8. Autoria
-Projeto desenvolvido por:  
-**Davi**, **Heitor** e **João Gabriel**
-
-Disciplina: Projeto Integrado de Computação  
-Curso: Engenharia de Computação
+## Grupo
+Davi Milanez de Almeida
+Heitor Valim Bianconi
+João Gabriel Rosa Pereira
