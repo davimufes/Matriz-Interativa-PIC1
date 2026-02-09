@@ -5,7 +5,7 @@
 
 #define LED_PIN     7
 #define NUM_LEDS    256 
-#define BRIGHTNESS  20  // Reduzido para 20 conforme pedido
+#define BRIGHTNESS  20
 
 CRGB leds[NUM_LEDS];
 RTC_DS1307 rtc;
