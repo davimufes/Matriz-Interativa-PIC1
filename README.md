@@ -25,6 +25,7 @@ O processamento utiliza um **Filtro Passa-Baixa (DSP)** para suavizar as leitura
 * **Módulo RTC DS1307:** Real-Time Clock para manutenção do tempo.
 * **Bateria 3,7 V (15 Ah):** Fonte de energia primária, confeccionada com 5 células 18650 para duração prolongada
 * **Conversor Boost HW-553:** Elevação de tensão para 5 V.
+* **2x Resistores de 270Ω e 1x de 470Ω:** Para um divisor de tensão entre o D7 do arduino e o DIN da matriz
 * **Protoboard e Jumpers:** Conexões da malha lógica.
 * **Cabos e Conectores:** Estrutura da malha de potência.
 * **Caixa de Acrílico:** Carcaça do dispositivo
