@@ -5,7 +5,7 @@
 
 #define LED_PIN     7
 #define NUM_LEDS    256 
-#define BRIGHTNESS  20
+#define BRIGHTNESS  20  // Reduzido para 20 conforme pedido
 
 CRGB leds[NUM_LEDS];
 RTC_DS1307 rtc;
@@ -15,9 +15,8 @@ char buffer[16][16];
 float axFiltrado = 0, ayFiltrado = 0, azFiltrado = 0;
 float alfa = 0.2;
 bool modoAtualRelogio = false; 
-bool bateuNaParede = false; // Flag para o efeito de vibração
+bool bateuNaParede = false;
 
-// --- Mapas e Fontes permanecem os mesmos ---
 int nivelAtual = 0; 
 const uint16_t mapas[5][16] = {
   { 0xFFFF, 0x8081, 0xBC8D, 0xBC8D, 0xBC8D, 0x8081, 0xBFBF, 0xA021, 0xAFEF, 0xA101, 0xAFFD, 0xA101, 0xBDFD, 0x8081, 0x8081, 0xFFFF },
@@ -39,7 +38,7 @@ const uint8_t fonteCubo[10][7] = {
 
 const uint8_t simboloCelsius[7] = { 0b01100011, 0b10010100, 0b10010100, 0b01100100, 0b00000100, 0b00000100, 0b00000011 };
 
-// --- Funções Auxiliares ---
+// --- Auxiliares ---
 int getIndex(int x, int y) {
   if (y % 2 == 0) return (y * 16) + (15 - x);
   else return (y * 16) + x;
@@ -75,10 +74,7 @@ void renderizar() {
         if (modoAtualRelogio) leds[idx] = blend(CRGB(40,0,80), CRGB(0,180,255), i*17); 
         else leds[idx] = CRGB(0, 0, 150); 
       }
-      else if (buffer[i][j] == 'O') {
-        // Efeito de piscar ao bater na parede
-        leds[idx] = bateuNaParede ? CRGB(255, 200, 200) : CRGB(200, 0, 0);
-      }
+      else if (buffer[i][j] == 'O') leds[idx] = bateuNaParede ? CRGB(255, 200, 200) : CRGB(200, 0, 0);
       else if (buffer[i][j] == 'X') leds[idx] = CRGB(0, 200, 0);
       else leds[idx] = CRGB(0, 0, 0);
     }
@@ -86,7 +82,7 @@ void renderizar() {
   FastLED.show();
 }
 
-// --- Modos de Operação ---
+// --- Funções de Modo ---
 void modoRelogio() {
   DateTime now = rtc.now();
   limparBuffer(); modoAtualRelogio = true; 
@@ -97,52 +93,54 @@ void modoRelogio() {
   renderizar();
 }
 
+void modoData() {
+  DateTime now = rtc.now();
+  limparBuffer(); modoAtualRelogio = false;
+  desenharDigito(now.day() / 10, 1, 2, 180);
+  desenharDigito(now.day() % 10, 1, 9, 180);
+  desenharDigito(now.month() / 10, 9, 2, 180);
+  desenharDigito(now.month() % 10, 9, 9, 180);
+  renderizar();
+}
+
+void modoTemperatura() {
+  int tempInt = (int)(mpu.getTemperature() / 340.0 + 36.53);
+  limparBuffer(); modoAtualRelogio = false;
+  desenharDigito(tempInt / 10, 1, 2, 270);
+  desenharDigito(tempInt % 10, 1, 9, 270);
+  // Desenha o símbolo de Celsius
+  for (int i = 0; i < 7; i++) {
+    for (int j = 0; j < 8; j++) {
+      if ((simboloCelsius[i] >> (7 - j)) & 1) escreverNoBuffer(4 + j, 9 + i, '#', 270);
+    }
+  }
+  renderizar();
+}
+
 void modoJogo(int16_t ax, int16_t ay) {
-  limparBuffer();
-  modoAtualRelogio = false;
-  bateuNaParede = false; // Reset da flag de colisão
-  
+  limparBuffer(); modoAtualRelogio = false; bateuNaParede = false;
   for (int i = 0; i < 16; i++) {
     for (int j = 0; j < 16; j++) {
       if ((mapas[nivelAtual][i] >> (15 - j)) & 1) escreverNoBuffer(j, i, '#', 0);
     }
   }
-  
   escreverNoBuffer(14, 14, 'X', 0);
-
   int px = bolaX, py = bolaY;
-  bool tentouMover = false;
+  if (ax > 4000) px = constrain(bolaX + 1, 0, 15);
+  else if (ax < -4000) px = constrain(bolaX - 1, 0, 15);
+  if (!((mapas[nivelAtual][bolaY] >> (15 - px)) & 1)) bolaX = px; else if (abs(ax)>4000) bateuNaParede = true;
 
-  // Eixo X
-  if (ax > 4000) { px = bolaX + 1; tentouMover = true; }
-  else if (ax < -4000) { px = bolaX - 1; tentouMover = true; }
-  
-  if (tentouMover) {
-    if (!((mapas[nivelAtual][bolaY] >> (15 - constrain(px, 0, 15))) & 1)) bolaX = constrain(px, 0, 15);
-    else bateuNaParede = true;
-  }
+  if (ay > 4000) py = constrain(bolaY + 1, 0, 15);
+  else if (ay < -4000) py = constrain(bolaY - 1, 0, 15);
+  if (!((mapas[nivelAtual][py] >> (15 - bolaX)) & 1)) bolaY = py; else if (abs(ay)>4000) bateuNaParede = true;
 
-  // Eixo Y
-  tentouMover = false;
-  if (ay > 4000) { py = bolaY + 1; tentouMover = true; }
-  else if (ay < -4000) { py = bolaY - 1; tentouMover = true; }
-
-  if (tentouMover) {
-    if (!((mapas[nivelAtual][constrain(py, 0, 15)] >> (15 - bolaX)) & 1)) bolaY = constrain(py, 0, 15);
-    else bateuNaParede = true;
-  }
-
-  // Vitória
   if (bolaX == 14 && bolaY == 14) {
     fill_solid(leds, NUM_LEDS, CRGB::Green); FastLED.show(); delay(500);
     bolaX = 1; bolaY = 1; nivelAtual = (nivelAtual + 1) % 5; 
   }
-  
   escreverNoBuffer(bolaX, bolaY, 'O', 0);
   renderizar();
 }
-
-// ... (modoData e modoTemperatura continuam iguais) ...
 
 void setup() {
   Serial.begin(9600); Wire.begin();
@@ -161,9 +159,9 @@ void loop() {
 
   if (azFiltrado > 10000)        modoJogo(ax, ay);
   else if (axFiltrado > 10000)   modoRelogio();
-  // ... outros modos ...
+  else if (axFiltrado < -10000)  modoData();
+  else if (ayFiltrado > 10000)   modoTemperatura();
   else { limparBuffer(); renderizar(); }
   
-  // Delay reduzido para o Jogo ser mais responsivo
   delay(azFiltrado > 10000 ? 30 : 250);
 }
