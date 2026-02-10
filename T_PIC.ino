@@ -1,7 +1,7 @@
 // ========================================================================================
-// PROJETO: Cubo Sensor (PIC 1 - UFES)
+// PROJETO: Display Gravitacional (PIC 1 - UFES)
 // DESCRIÇÃO: Matriz de LED interativa com Acelerômetro, Relógio e Termômetro.
-// AUTOR: Davi
+// GRUPO: Davi, Heitor e João
 // ========================================================================================
 
 // ----------------------------------------------------------------------------------------
