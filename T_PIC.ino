@@ -1,27 +1,31 @@
+// Bibliotecas
 #include <Wire.h>
 #include <MPU6050.h>
 #include "RTClib.h"
 #include <FastLED.h>
 
+// Definições de Hardware
 #define LED_PIN     7
 #define NUM_LEDS    256 
 #define BRIGHTNESS  20
 
+// Variáveis de i/o
 CRGB leds[NUM_LEDS];
 RTC_DS1307 rtc;
 MPU6050 mpu(0x69); 
 char buffer[16][16];
 
+// Variáveis de controle das funções
 float axFiltrado = 0, ayFiltrado = 0, azFiltrado = 0;
 float alfa = 0.2;
 bool modoAtualRelogio = false; 
 bool bateuNaParede = false;
-
 int nivelAtual = 0; 
+
 const uint16_t mapas[5][16] = {
-  { 0xFFFF, 0x8081, 0xBC8D, 0xBC8D, 0xBC8D, 0x8081, 0xBFBF, 0xA021, 0xAFEF, 0xA101, 0xAFFD, 0xA101, 0xBDFD, 0x8081, 0x8081, 0xFFFF },
-  { 0xFFFF, 0x8001, 0x8FE1, 0x8021, 0x8EE1, 0x8221, 0x8EE1, 0x8221, 0x8EE1, 0x8221, 0x8EE1, 0x8221, 0x8021, 0x8FE1, 0x8001, 0xFFFF },
-  { 0xFFFF, 0x9001, 0x9FF1, 0x9001, 0x90F1, 0x9001, 0x9FF1, 0x9001, 0x90F1, 0x8001, 0x9FF1, 0x9001, 0x90F1, 0x9001, 0x9001, 0xFFFF },
+  { 0xFFFF, 0x8081, 0xBC8D, 0xBC0D, 0xBC8D, 0x8081, 0xBFBF, 0xA021, 0xAFEF, 0xA101, 0xEFFD, 0xA101, 0xBDFD, 0x8081, 0x8001, 0xFFFF },
+  { 0xFFFF, 0x8181, 0xFBB7, 0x8105, 0xBFF5, 0xA015, 0xACC5, 0x8845, 0xDBB7, 0x8B81, 0xEBFF, 0x8801, 0xBFFD, 0x8001, 0x8001, 0xFFFF },
+  { 0xFFFF, 0x8001, 0xFFFD, 0x8001, 0xBFFF, 0x8001, 0xFFFD, 0x8001, 0xBFFF, 0x8001, 0xFFFD, 0x8001, 0xBFFF, 0x8001, 0x8001, 0xFFFF },
   { 0xE003, 0x9005, 0xC87D, 0xAAD5, 0xAE15, 0xA2D1, 0xA945, 0x8855, 0x8BA9, 0xAA11, 0xAA43, 0xA925, 0xA61D, 0x9085, 0x8891, 0xFFFF },
   { 0xFFFF, 0x8001, 0xABB1, 0x8001, 0x8201, 0xBEFB, 0x8001, 0x8BD1, 0x8BD1, 0x8001, 0xA001, 0xBF7B, 0x8001, 0x8E01, 0x8001, 0xFFFF }
 };
@@ -86,10 +90,10 @@ void renderizar() {
 void modoRelogio() {
   DateTime now = rtc.now();
   limparBuffer(); modoAtualRelogio = true; 
-  desenharDigito(now.hour() / 10, 1, 2, 0);
-  desenharDigito(now.hour() % 10, 1, 9, 0);
-  desenharDigito(now.minute() / 10, 9, 2, 0);
-  desenharDigito(now.minute() % 10, 9, 9, 0);
+  desenharDigito(now.hour() / 10, 1, 2, 270);
+  desenharDigito(now.hour() % 10, 1, 9, 270);
+  desenharDigito(now.minute() / 10, 9, 2, 270);
+  desenharDigito(now.minute() % 10, 9, 9, 270);
   renderizar();
 }
 
@@ -106,8 +110,8 @@ void modoData() {
 void modoTemperatura() {
   int tempInt = (int)(mpu.getTemperature() / 340.0 + 36.53);
   limparBuffer(); modoAtualRelogio = false;
-  desenharDigito(tempInt / 10, 1, 2, 270);
-  desenharDigito(tempInt % 10, 1, 9, 270);
+  desenharDigito(tempInt / 10, 1, 2, 90);
+  desenharDigito(tempInt % 10, 1, 9, 90);
   // Desenha o símbolo de Celsius
   for (int i = 0; i < 7; i++) {
     for (int j = 0; j < 8; j++) {
