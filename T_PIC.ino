@@ -128,12 +128,12 @@ void modoRelogio() {
     limparBuffer(); modoGlobal = 1; 
 
     // Horas (Gradiente Roxo/Azul)
-    desenharDigito(now.hour() / 10, 2, 2, 270, '#');
-    desenharDigito(now.hour() % 10, 2, 9, 270, '#');
+    desenharDigito(now.hour() / 10, 1, 2, 270, '#');
+    desenharDigito(now.hour() % 10, 1, 9, 270, '#');
     
     // Minutos (Gradiente Laranja/Amarelo)
-    desenharDigito(now.minute() / 10, 9, 2, 270, 'M');
-    desenharDigito(now.minute() % 10, 9, 9, 270, 'M');
+    desenharDigito(now.minute() / 10, 8, 2, 270, 'M');
+    desenharDigito(now.minute() % 10, 8, 9, 270, 'M');
 
     int seg = now.second();
     for (int i = 0; i < 15; i++) {
@@ -156,7 +156,7 @@ void modoData() {
 }
 
 void modoTemperatura() {
-    int tempInt = (int)(mpu.getTemperature() / 340.0 + 27);
+    int tempInt = (int)(mpu.getTemperature() / 340.0 + 30);
     limparBuffer(); modoGlobal = 3;
     desenharDigito(tempInt / 10, 1, 2, 90, '#');
     desenharDigito(tempInt % 10, 1, 9, 90, '#');
