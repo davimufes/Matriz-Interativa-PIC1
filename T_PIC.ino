@@ -142,9 +142,9 @@ void modoRelogio() {
     int seg = now.second();
     for (int i = 0; i < 15; i++) {
         if (seg > i)      escreverNoBuffer(i, 0, 'S', 0);   
-        if (seg > i + 15) escreverNoBuffer(i, 1, 'S', 0);   
-        if (seg > i + 30) escreverNoBuffer(i, 14, 'S', 0);  
-        if (seg > i + 45) escreverNoBuffer(i, 15, 'S', 0);  
+        if (seg > i + 15) escreverNoBuffer(15, i, 'S', 0);   
+        if (seg > i + 30) escreverNoBuffer(15-i, 15, 'S', 0);  
+        if (seg > i + 45) escreverNoBuffer(0, 15-i, 'S', 0);  
     }
     renderizar();
 }
