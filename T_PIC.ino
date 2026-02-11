@@ -65,58 +65,54 @@ const uint8_t fonteCubo[10][7] = {
 };
 
 const uint8_t simboloCelsius[7] = { 0b01100011, 0b10010100, 0b10010100, 0b01100100, 0b00000100, 0b00000100, 0b00000011 };
-
 // ----------------------------------------------------------------------------------------
-// 5. FUNÇÕES AUXILIARES DE DESENHO E RENDERIZAÇÃO
+// 5. AUXILIARES E RENDERIZAÇÃO
 // ----------------------------------------------------------------------------------------
 
-// Converte coordenadas X/Y para o índice linear do FastLED (Lógica de zigue-zague)
 int getIndex(int x, int y) {
     if (y % 2 == 0) return (y * 16) + (15 - x);
     else return (y * 16) + x;
 }
 
-// Limpa a matriz virtual preenchendo com pontos
 void limparBuffer() {
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) buffer[i][j] = '.'; 
     }
 }
 
-// Escreve um caractere no buffer com suporte a rotação (90, 180, 270 graus)
 void escreverNoBuffer(int x, int y, char c, int rot) {
     int nx = x, ny = y;
     if (rot == 90) { nx = y; ny = 15 - x; }
     else if (rot == 180) { nx = 15 - x; ny = 15 - y; }
     else if (rot == 270) { nx = 15 - y; ny = x; }
-    
     if (nx >= 0 && nx < 16 && ny >= 0 && ny < 16) buffer[ny][nx] = c;
 }
 
-// Processa a fonte e desenha o dígito no buffer
-void desenharDigito(int d, int xOff, int yOff, int rot) {
+void desenharDigito(int d, int xOff, int yOff, int rot, char c) {
     for (int i = 0; i < 7; i++) {
         for (int j = 0; j < 5; j++) {
-            if ((fonteCubo[d][i] >> (4 - j)) & 1) escreverNoBuffer(yOff + j, xOff + i, '#', rot);
+            if ((fonteCubo[d][i] >> (4 - j)) & 1) escreverNoBuffer(yOff + j, xOff + i, c, rot);
         }
     }
 }
 
-// Converte o buffer de caracteres em cores reais nos LEDs
 void renderizar() {
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             int idx = getIndex(j, i);
+            
             if (buffer[i][j] == '#') {
-                // Aplicação de Gradientes por Modo
-                if (modoGlobal == 1)      leds[idx] = blend(CRGB(40,0,80), CRGB(0,180,255), i*17); 
-                else if (modoGlobal == 2) leds[idx] = blend(CRGB(0,120,0), CRGB(200,200,0), i*17); 
-                else if (modoGlobal == 3) leds[idx] = blend(CRGB(200,0,0), CRGB(255,140,0), i*17); 
+                if (modoGlobal == 1)      leds[idx] = blend(CRGB(40,0,80), CRGB(0,180,255), i*17); // Roxo -> Azul
+                else if (modoGlobal == 2) leds[idx] = blend(CRGB(0,120,0), CRGB(200,200,0), i*17); // Verde -> Lima
+                else if (modoGlobal == 3) leds[idx] = blend(CRGB(200,0,0), CRGB(255,140,0), i*17); // Vermelho -> Laranja
                 else                      leds[idx] = CRGB(0, 0, 150); 
             }
-            else if (buffer[i][j] == 'S') leds[idx] = CRGB(0, 255, 0); // Segundos fixos em Verde
+            else if (buffer[i][j] == 'M') { // Minutos
+                leds[idx] = blend(CRGB(255,100,0), CRGB(255,255,0), i*17); // Laranja -> Amarelo
+            }
+            else if (buffer[i][j] == 'S') leds[idx] = CRGB(0, 255, 0); // Segundos
             else if (buffer[i][j] == 'O') leds[idx] = bateuNaParede ? CRGB(255, 255, 255) : CRGB(255, 0, 0);
-            else if (buffer[i][j] == 'X') leds[idx] = CRGB(0, 255, 0); // Objetivo
+            else if (buffer[i][j] == 'X') leds[idx] = CRGB(0, 255, 0);
             else leds[idx] = CRGB(0, 0, 0);
         }
     }
@@ -124,21 +120,21 @@ void renderizar() {
 }
 
 // ----------------------------------------------------------------------------------------
-// 6. FUNÇÕES DE CADA MODO DO CUBO
+// 6. MODOS DE OPERAÇÃO
 // ----------------------------------------------------------------------------------------
 
 void modoRelogio() {
     DateTime now = rtc.now();
-    limparBuffer(); 
-    modoGlobal = 1; 
+    limparBuffer(); modoGlobal = 1; 
 
-    // Desenha Horas e Minutos (Rotação 270 para visualização frontal)
-    desenharDigito(now.hour() / 10, 1, 2, 270);
-    desenharDigito(now.hour() % 10, 1, 9, 270);
-    desenharDigito(now.minute() / 10, 9, 2, 270);
-    desenharDigito(now.minute() % 10, 9, 9, 270);
+    // Horas (Gradiente Roxo/Azul)
+    desenharDigito(now.hour() / 10, 2, 2, 270, '#');
+    desenharDigito(now.hour() % 10, 2, 9, 270, '#');
+    
+    // Minutos (Gradiente Laranja/Amarelo)
+    desenharDigito(now.minute() / 10, 9, 2, 270, 'M');
+    desenharDigito(now.minute() % 10, 9, 9, 270, 'M');
 
-    // Barra de segundos nas bordas
     int seg = now.second();
     for (int i = 0; i < 15; i++) {
         if (seg > i)      escreverNoBuffer(i, 0, 'S', 0);   
@@ -152,18 +148,18 @@ void modoRelogio() {
 void modoData() {
     DateTime now = rtc.now();
     limparBuffer(); modoGlobal = 2;
-    desenharDigito(now.day() / 10, 1, 2, 180);
-    desenharDigito(now.day() % 10, 1, 9, 180);
-    desenharDigito(now.month() / 10, 9, 2, 180);
-    desenharDigito(now.month() % 10, 9, 9, 180);
+    desenharDigito(now.day() / 10, 1, 2, 180, '#');
+    desenharDigito(now.day() % 10, 1, 9, 180, '#');
+    desenharDigito(now.month() / 10, 9, 2, 180, '#');
+    desenharDigito(now.month() % 10, 9, 9, 180, '#');
     renderizar();
 }
 
 void modoTemperatura() {
-    int tempInt = (int)(mpu.getTemperature() / 340.0 + 27); // Conversão Datasheet + Offset
+    int tempInt = (int)(mpu.getTemperature() / 340.0 + 27);
     limparBuffer(); modoGlobal = 3;
-    desenharDigito(tempInt / 10, 1, 2, 90);
-    desenharDigito(tempInt % 10, 1, 9, 90);
+    desenharDigito(tempInt / 10, 1, 2, 90, '#');
+    desenharDigito(tempInt % 10, 1, 9, 90, '#');
     for (int i = 0; i < 7; i++) {
         for (int j = 0; j < 8; j++) {
             if ((simboloCelsius[i] >> (7 - j)) & 1) escreverNoBuffer(4 + j, 9 + i, '#', 90);
@@ -174,37 +170,29 @@ void modoTemperatura() {
 
 void modoJogo(int16_t ay, int16_t ax) {
     limparBuffer(); modoGlobal = 0; bateuNaParede = false;
-    
-    // Desenha o mapa do labirinto
     for (int i = 0; i < 16; i++) {
         for (int j = 0; j < 16; j++) {
             if ((mapas[nivelAtual][i] >> (15 - j)) & 1) escreverNoBuffer(j, i, '#', 0);
         }
     }
-    escreverNoBuffer(14, 14, 'X', 0); // Alvo final do nível
+    escreverNoBuffer(14, 14, 'X', 0); 
     
-    // Lógica de Movimentação da Bolinha
     int px = bolaX, py = bolaY;
     if (ax > 4000) px = constrain(bolaX + 1, 0, 15);
     else if (ax < -4000) px = constrain(bolaX - 1, 0, 15);
-    
-    // Checa colisão em X
     if (!((mapas[nivelAtual][bolaY] >> (15 - px)) & 1)) bolaX = px; 
     else if (abs(ax) > 4000) bateuNaParede = true;
 
     if (ay > 4000) py = constrain(bolaY + 1, 0, 15);
     else if (ay < -4000) py = constrain(bolaY - 1, 0, 15);
-    
-    // Checa colisão em Y
     if (!((mapas[nivelAtual][py] >> (15 - bolaX)) & 1)) bolaY = py; 
     else if (abs(ay) > 4000) bateuNaParede = true;
 
-    // Condição de Vitória (Troca de Nível)
     if (bolaX == 14 && bolaY == 14) {
         fill_solid(leds, NUM_LEDS, CRGB::Green); FastLED.show(); delay(500);
         bolaX = 1; bolaY = 1; nivelAtual = (nivelAtual + 1) % 5; 
     }
-    escreverNoBuffer(bolaX, bolaY, 'O', 0); // Desenha a bolinha
+    escreverNoBuffer(bolaX, bolaY, 'O', 0);
     renderizar();
 }
 
